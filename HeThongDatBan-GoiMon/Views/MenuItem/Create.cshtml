@@ -1,0 +1,144 @@
+@model HeThongDatBan_GoiMon.Models.CreateMenuItemViewModel
+
+@{
+    ViewData["Title"] = "Thêm món ăn mới";
+    var predefinedUnits = ViewBag.PredefinedUnits as IReadOnlyList<string> ?? new List<string>();
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="card-title mb-0"><i class="bi bi-plus-circle"></i> Thêm món ăn mới</h4>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post" id="createMenuItemForm" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Tên món -->
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-bold">Tên món <span
+                            class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" placeholder="Ví dụ: Bò né sốt tiêu đen" autofocus />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Nhóm món & Đơn vị tính -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MenuCategoryId" class="form-label fw-bold">Nhóm món <span
+                                    class="text-danger">*</span></label>
+                                    <select asp-for="MenuCategoryId" asp-items="ViewBag.Categories" class="form-select">
+                                        <option value="">-- Chọn nhóm món --</option>
+                                    </select>
+                                    <span asp-validation-for="MenuCategoryId" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Unit" class="form-label fw-bold">Đơn vị tính <span
+                                        class="text-danger">*</span></label>
+                                        <input asp-for="Unit" class="form-control" list="unitSuggestions"
+                                               placeholder="Chọn hoặc nhập tự do (ví dụ: Phần, Đĩa...)" />
+                                        <datalist id="unitSuggestions">
+                                            @foreach (var unit in predefinedUnits)
+                                            {
+                                                <option value="@unit">@unit</option>
+                                            }
+                                        </datalist>
+                                        <span asp-validation-for="Unit" class="text-danger small"></span>
+                                        <div class="form-text small text-muted">Có thể chọn nhanh từ danh sách gợi ý hoặc nhập tự
+                                            do.</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Giá bán & Thời gian chế biến -->
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label asp-for="Price" class="form-label fw-bold">Giá bán (VND) <span
+                                                class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <input asp-for="Price" type="number" step="1" min="1" max="50000000"
+                                                           class="form-control" id="priceInput" placeholder="Ví dụ: 35000" />
+                                                    <span class="input-group-text">VND</span>
+                                                </div>
+                                                <div id="priceFormatted" class="form-text text-success fw-bold mt-1"
+                                                     style="min-height: 20px;"></div>
+                                                <span asp-validation-for="Price" class="text-danger small"></span>
+                                                <div class="form-text small text-muted">Số nguyên dương từ 1 đến 50.000.000 VND.</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label asp-for="PreparationTimeMinutes" class="form-label fw-bold">Thời gian chế biến (phút)
+                                                    <span class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input asp-for="PreparationTimeMinutes" type="number" min="1" max="300"
+                                                               class="form-control" placeholder="Ví dụ: 15" />
+                                                        <span class="input-group-text">phút</span>
+                                                    </div>
+                                                    <span asp-validation-for="PreparationTimeMinutes" class="text-danger small"></span>
+                                                    <div class="form-text small text-muted">Số phút dự kiến để hoàn thành món.</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Mô tả ngắn -->
+                                            <div class="mb-3">
+                                                <label asp-for="Description" class="form-label fw-bold">Mô tả ngắn</label>
+                                                <textarea asp-for="Description" class="form-control" rows="3"
+                                                          placeholder="Mô tả thành phần, khẩu vị đặc trưng của món..."></textarea>
+                                                <span asp-validation-for="Description" class="text-danger small"></span>
+                                            </div>
+
+                                            <!-- Trạng thái đang bán -->
+                                            <div class="mb-4">
+                                                <div class="form-check form-switch p-0 d-flex align-items-center">
+                                                    <input asp-for="IsActive" class="form-check-input ms-0 me-3"
+                                                           style="width: 2.5em; height: 1.3em;" type="checkbox" id="isActiveSwitch">
+                                                    <label class="form-check-label fw-bold" for="isActiveSwitch">
+                                                        Trạng thái đang bán
+                                                    </label>
+                                                </div>
+                                                <div class="form-text small text-muted ps-1">Mặc định được bật (đang bán). Tắt nếu tạm thời chưa
+                                                    bán món này.</div>
+                                                </div>
+
+                                                <!-- Action buttons -->
+                                                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                                    <a asp-action="Index" class="btn btn-outline-secondary">
+                                                        &larr; Quay lại danh sách
+                                                    </a>
+                                                    <button type="submit" class="btn btn-primary px-4">
+                                                        Lưu món ăn
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @section Scripts {
+                                @{
+                                    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+                                }
+
+                                <script>
+                                    document.addEventListener("DOMContentLoaded", function () {
+                                        const priceInput = document.getElementById("priceInput");
+                                        const priceFormatted = document.getElementById("priceFormatted");
+
+                                        function updateFormattedPrice() {
+                                            const val = parseFloat(priceInput.value);
+                                            if (!isNaN(val) && val > 0) {
+                                                priceFormatted.textContent = "Hiển thị: " + val.toLocaleString('vi-VN') + " VND";
+                                            } else {
+                                                priceFormatted.textContent = "";
+                                            }
+                                        }
+
+                                        if (priceInput) {
+                                            priceInput.addEventListener("input", updateFormattedPrice);
+                                            updateFormattedPrice();
+                                        }
+                                    });
+                                </script>
+                            }
