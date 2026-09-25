@@ -22,10 +22,10 @@ public class AccountController(LoginService loginService) : Controller
     public async Task<IActionResult> Login(LoginViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
-        var account = await loginService.AuthenticateAsync(model.Identifier, model.Password);
+        var (account, error) = await loginService.AuthenticateAsync(model.Identifier, model.Password);
         if (account is null)
         {
-            ModelState.AddModelError(string.Empty, LoginService.InvalidCredentials);
+            ModelState.AddModelError(string.Empty, error ?? LoginService.InvalidCredentials);
             return View(model);
         }
 

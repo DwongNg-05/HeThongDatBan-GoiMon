@@ -49,17 +49,19 @@ public class LoginAndAuditTests(SqlServerApplicationFactory factory) : IClassFix
     }
 
     [Theory]
-    [InlineData("quanly1", "WrongPassword!")]
-    [InlineData("0900000001", "WrongPassword!")]
-    [InlineData("does-not-exist", "WrongPassword!")]
-    [InlineData("0999999999", "WrongPassword!")]
-    public async Task Invalid_credentials_return_same_generic_error_and_no_session(string identifier, string password)
+    [InlineData("quanly1", "WrongPassword!", LoginService.InvalidCredentials)]
+    [InlineData("0900000001", "WrongPassword!", LoginService.InvalidCredentials)]
+    [InlineData("does-not-exist", "WrongPassword!", LoginService.AccountNotFound)]
+    [InlineData("0999999999", "WrongPassword!", LoginService.AccountNotFound)]
+    public async Task Invalid_credentials_return_expected_error_and_no_session(string identifier, string password, string expectedError)
     {
         using var client = factory.Browser();
         var response = await LoginAsync(client, identifier, password);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
-        Assert.Contains(LoginService.InvalidCredentials, html);
+        Assert.Contains(expectedError, html);
+        Assert.DoesNotContain(expectedError == LoginService.AccountNotFound
+            ? LoginService.InvalidCredentials : LoginService.AccountNotFound, html);
         Assert.DoesNotContain(password, html);
         Assert.False(response.Headers.TryGetValues("Set-Cookie", out var cookies) && cookies.Any(x => x.StartsWith("HeThongDatBan.Auth=")));
         Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/Management")).StatusCode);

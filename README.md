@@ -40,7 +40,7 @@ Có thể mở `HeThongDatBan-GoiMon.slnx` trong Visual Studio để phát tri�
 2. Vào **Thực đơn → Chỉnh sửa**, sửa tên món rồi lưu.
 3. Mở **Lịch sử thay đổi**: kiểm tra tên/ID người thực hiện, thời gian Việt Nam và giá trị trước/sau.
 4. Đăng xuất; đăng nhập bằng `0900000002` và mật khẩu demo. Sửa giá một món và kiểm tra lịch sử ghi `quanly2`.
-5. Đăng xuất. Thử sai mật khẩu, tên tài khoản không tồn tại và số điện thoại không tồn tại. Cả ba đều nhận: **Tên đăng nhập/số điện thoại hoặc mật khẩu không hợp lệ.**
+5. Đăng xuất. Thử tên tài khoản hoặc số điện thoại không tồn tại: hiển thị **Tài khoản không tồn tại !**. Nếu tài khoản tồn tại nhưng sai mật khẩu hoặc ngừng hoạt động, hiển thị **Tên đăng nhập/số điện thoại hoặc mật khẩu không hợp lệ.** Theo yêu cầu cập nhật, thông báo phân biệt tài khoản không tồn tại, thay thế AC ban đầu về lỗi chung không tiết lộ sự tồn tại của tài khoản.
 
 Tên đăng nhập không phân biệt chữ hoa/thường; khoảng trắng đầu/cuối tên đăng nhập hoặc số điện thoại được bỏ qua. Số điện thoại được nhập đúng dạng đã lưu, ví dụ `0900000001`. Mật khẩu được kiểm tra nguyên trạng, phân biệt chữ hoa/thường.
 
@@ -75,7 +75,7 @@ Không bắt buộc chạy lệnh migration thủ công khi demo ở Development
 
 Bộ kiểm thử tích hợp dùng SQL Server thật (mặc định LocalDB), tạo database riêng tên `HeThongDatBanGoiMon_Tests_<GUID>` và xóa database đó sau khi hoàn tất. Không dùng database demo. Có thể đặt `TEST_SQLSERVER_CONNECTION` để chạy trên SQL Server khác; tài khoản kiểm thử cần quyền tạo/xóa database. Tên database luôn được thay bằng tên ngẫu nhiên riêng của bộ test.
 
-Các tình huống được kiểm tra: đăng nhập bằng tên/số điện thoại; lỗi chung khi sai thông tin; hash có salt; đúng định danh trong cookie; hai tài khoản ghi lịch sử riêng; ngăn giả mạo người sửa; từ chối tài khoản ngừng hoạt động; chặn truy cập khi chưa đăng nhập; đăng xuất; chống CSRF; không chuyển hướng tới website bên ngoài; không khóa sau 6 lần sai; kiểm tra dữ liệu đầu vào và xung đột cập nhật.
+Các tình huống được kiểm tra: đăng nhập bằng tên/số điện thoại; thông báo tài khoản không tồn tại và thông báo sai mật khẩu; hash có salt; đúng định danh trong cookie; hai tài khoản ghi lịch sử riêng; ngăn giả mạo người sửa; từ chối tài khoản ngừng hoạt động; chặn truy cập khi chưa đăng nhập; đăng xuất; chống CSRF; không chuyển hướng tới website bên ngoài; không khóa sau 6 lần sai; kiểm tra dữ liệu đầu vào và xung đột cập nhật.
 
 Tham khảo triển khai: [cookie authentication](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0), [PasswordHasher](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasher-1?view=aspnetcore-10.0), [EF Core SQL Server](https://learn.microsoft.com/en-us/ef/core/providers/sql-server/).
 
