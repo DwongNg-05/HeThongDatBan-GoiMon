@@ -10,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsDevelopment())
 {
+    // Per-machine development settings stay out of Git; environment/CLI overrides still win.
+    builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false)
+        .AddEnvironmentVariables().AddCommandLine(args);
     var connection = builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection.");
     builder.Configuration["ConnectionStrings:DefaultConnection"] = await LocalDbConnection.PrepareAsync(connection);

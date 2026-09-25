@@ -69,6 +69,18 @@ Phạm vi thực đơn của task này chỉ gồm danh sách mẫu và sửa t�
 
 ## Kết nối SQL Server khác
 
+Có thể tạo file `HeThongDatBan-GoiMon/appsettings.Local.json` để cấu hình riêng cho mỗi máy trong môi trường Development. File này đã được loại khỏi Git. Ví dụ máy có instance `MSSQLSERVER07`:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost\\MSSQLSERVER07;Database=HeThongDatBanGoiMon;Trusted_Connection=True;TrustServerCertificate=True"
+  }
+}
+```
+
+Khi dùng cấu hình này, ứng dụng kết nối SQL Server trực tiếp và không khởi động LocalDB. Trong SSMS, nhập `localhost\MSSQLSERVER07`, chọn Windows Authentication và database `HeThongDatBanGoiMon`. Biến môi trường và tham số dòng lệnh vẫn có ưu tiên cao hơn file cấu hình riêng. Chuyển server chỉ đổi nơi kết nối, không tự chuyển dữ liệu; cần sao chép dữ liệu trước nếu muốn giữ tài khoản, thực đơn và lịch sử cũ.
+
 Cấu hình mặc định nằm ở `HeThongDatBan-GoiMon/appsettings.json`. Có thể dùng biến môi trường PowerShell để thay thế mà không sửa file chung:
 
 ```powershell
