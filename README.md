@@ -1,6 +1,6 @@
 # Hệ thống đặt bàn và gọi món
 
-Dự án ASP.NET Core MVC (.NET 10), dùng SQL Server. Task **S1-01** bổ sung đăng nhập quản lý bằng tên tài khoản hoặc số điện thoại và truy vết người sửa tên món/giá.
+Dự án ASP.NET Core MVC (.NET 10), dùng SQL Server. **S1-01 Task 1** gồm đăng nhập quản lý bằng tên tài khoản hoặc số điện thoại và truy vết người sửa tên món/giá. **Task 2** bổ sung khóa đăng nhập 15 phút sau 5 lần sai trong 15 phút.
 
 ## Yêu cầu
 
@@ -40,11 +40,30 @@ Có thể mở `HeThongDatBan-GoiMon.slnx` trong Visual Studio để phát tri�
 2. Vào **Thực đơn → Chỉnh sửa**, sửa tên món rồi lưu.
 3. Mở **Lịch sử thay đổi**: kiểm tra tên/ID người thực hiện, thời gian Việt Nam và giá trị trước/sau.
 4. Đăng xuất; đăng nhập bằng `0900000002` và mật khẩu demo. Sửa giá một món và kiểm tra lịch sử ghi `quanly2`.
-5. Đăng xuất. Thử tên tài khoản hoặc số điện thoại không tồn tại: hiển thị **Tài khoản không tồn tại !**. Nếu tài khoản tồn tại nhưng sai mật khẩu hoặc ngừng hoạt động, hiển thị **Tên đăng nhập/số điện thoại hoặc mật khẩu không hợp lệ.** Theo yêu cầu cập nhật, thông báo phân biệt tài khoản không tồn tại, thay thế AC ban đầu về lỗi chung không tiết lộ sự tồn tại của tài khoản.
+5. Đăng xuất. Thử tên tài khoản/số điện thoại không tồn tại hoặc sai mật khẩu khi tài khoản chưa bị khóa: cùng hiển thị **Tên đăng nhập/số điện thoại hoặc mật khẩu không hợp lệ.** Task 2 sử dụng lại thông báo chung, không còn thông báo riêng xác nhận tài khoản không tồn tại.
 
 Tên đăng nhập không phân biệt chữ hoa/thường; khoảng trắng đầu/cuối tên đăng nhập hoặc số điện thoại được bỏ qua. Số điện thoại được nhập đúng dạng đã lưu, ví dụ `0900000001`. Mật khẩu được kiểm tra nguyên trạng, phân biệt chữ hoa/thường.
 
-Phiên đăng nhập dùng cookie bảo vệ bởi ASP.NET Core Data Protection, chứa ID, tên tài khoản và vai trò quản lý; không chứa mật khẩu/hash. Đây là cookie phiên trình duyệt, với giới hạn tuyệt đối của vé xác thực là 14 ngày. Không có bộ đếm khóa sau 5 lần sai và không có hết phiên sau 30 phút không thao tác. Tài khoản ngừng hoạt động không thể đăng nhập; phiên đang có cũng bị từ chối ở yêu cầu tiếp theo.
+Phiên đăng nhập dùng cookie bảo vệ bởi ASP.NET Core Data Protection, chứa ID, tên tài khoản và vai trò quản lý; không chứa mật khẩu/hash. Đây là cookie phiên trình duyệt, với giới hạn tuyệt đối của vé xác thực là 14 ngày. Chưa có hết phiên sau 30 phút không thao tác. Tài khoản ngừng hoạt động không thể đăng nhập; phiên đang có cũng bị từ chối ở yêu cầu tiếp theo.
+
+## Demo Task 2 — Khóa đăng nhập tạm thời
+
+1. Dùng `quanly1` hoặc `0900000001`, nhập sai mật khẩu 4 lần: nhận thông báo lỗi chung và vẫn có thể thử lại.
+2. Nhập sai lần thứ 5 trong 15 phút: tài khoản bị khóa đăng nhập 15 phút, giao diện hiển thị đồng hồ **15:00** đếm ngược.
+3. Nhập đúng `Demo@12345` khi đang khóa: vẫn bị từ chối, giao diện hiển thị thời gian còn lại. Thử lại không kéo dài thời gian khóa.
+4. Chờ hết 15 phút rồi nhập đúng: đăng nhập thành công và xóa các lần sai liên quan. Có thể dùng `quanly2` để tiếp tục demo các chức năng khác trong lúc `quanly1` bị khóa.
+
+Quy tắc được áp dụng ở máy chủ và lưu trong SQL Server:
+
+- Bảng `FailedLoginAttempts` lưu `AccountId` và `OccurredAtUtc` cho từng lần sai mật khẩu của tài khoản đang hoạt động. Tên đăng nhập và số điện thoại dùng chung lịch sử của tài khoản đó.
+- Chỉ tính các lần có thời điểm **lớn hơn hiện tại trừ 15 phút và không vượt quá hiện tại**; lần sai đúng ở ranh giới 15 phút không còn được tính. Các bản ghi cũ được dọn ở lần thử tiếp theo.
+- `ManagerAccounts.LockoutEndUtc` lưu thời điểm hết khóa (UTC). Khóa tạm thời không đổi trạng thái quản trị `IsActive` và không đăng xuất phiên đã có.
+- Trong thời gian khóa, yêu cầu bị từ chối không ghi thêm lần sai và không gia hạn khóa. Sau khi hết khóa, lần thử mới bắt đầu chu kỳ mới; đăng nhập thành công xóa toàn bộ lần sai và thời điểm khóa.
+- Thời gian còn lại được làm tròn lên tới giây và hiển thị dạng phút:giây, kể cả khi không bật JavaScript. JavaScript cập nhật đếm ngược; SQL Server và đồng hồ máy chủ quyết định khi nào được đăng nhập. Khi đổi sang tài khoản khác, đồng hồ cũ được ẩn để tránh nhầm lẫn.
+- Không tạo bản ghi lỗi cho tài khoản không tồn tại, không tiết lộ sự tồn tại qua thông báo. Tài khoản ngừng hoạt động cũng nhận lỗi chung.
+- Mỗi yêu cầu đăng nhập khóa cập nhật bản ghi tài khoản trong giao dịch SQL Server để các lần thử đồng thời không làm thất thoát số lần sai.
+
+Migration `AddLoginLockout` chỉ thêm bảng/cột, giữ nguyên tài khoản, món và lịch sử thay đổi hiện có. Khi chạy ở Development, ứng dụng tự cập nhật database. Khi xem SQL Server bằng SSMS, dùng `(localdb)\MSSQLLocalDB`, chọn database `HeThongDatBanGoiMon` rồi Refresh bảng.
 
 Phạm vi thực đơn của task này chỉ gồm danh sách mẫu và sửa tên/giá để chứng minh truy vết; chưa triển khai CRUD thực đơn đầy đủ. Lịch sử hiển thị 100 thay đổi gần nhất, database giữ toàn bộ lịch sử. Các luồng sửa thực đơn tiếp theo cần đi qua `MenuService` hoặc bổ sung cơ chế truy vết tương đương. Người thực hiện được lấy từ phiên đăng nhập, không nhận từ dữ liệu gửi lên. Cập nhật món và lịch sử được lưu trong cùng giao dịch; `RowVersion` ngăn ghi đè khi hai người cùng sửa một phiên bản món.
 
@@ -75,7 +94,11 @@ Không bắt buộc chạy lệnh migration thủ công khi demo ở Development
 
 Bộ kiểm thử tích hợp dùng SQL Server thật (mặc định LocalDB), tạo database riêng tên `HeThongDatBanGoiMon_Tests_<GUID>` và xóa database đó sau khi hoàn tất. Không dùng database demo. Có thể đặt `TEST_SQLSERVER_CONNECTION` để chạy trên SQL Server khác; tài khoản kiểm thử cần quyền tạo/xóa database. Tên database luôn được thay bằng tên ngẫu nhiên riêng của bộ test.
 
-Các tình huống được kiểm tra: đăng nhập bằng tên/số điện thoại; thông báo tài khoản không tồn tại và thông báo sai mật khẩu; hash có salt; đúng định danh trong cookie; hai tài khoản ghi lịch sử riêng; ngăn giả mạo người sửa; từ chối tài khoản ngừng hoạt động; chặn truy cập khi chưa đăng nhập; đăng xuất; chống CSRF; không chuyển hướng tới website bên ngoài; không khóa sau 6 lần sai; kiểm tra dữ liệu đầu vào và xung đột cập nhật.
+Các tình huống được kiểm tra: đăng nhập bằng tên/số điện thoại; lỗi chung khi sai thông tin; hash có salt; đúng định danh trong cookie; hai tài khoản ghi lịch sử riêng; ngăn giả mạo người sửa; từ chối tài khoản ngừng hoạt động; chặn truy cập khi chưa đăng nhập; đăng xuất; chống CSRF; không chuyển hướng tới website bên ngoài; kiểm tra dữ liệu đầu vào và xung đột cập nhật.
+
+Kiểm thử Task 2 dùng `TimeProvider` giả lập để kiểm tra 1–4 lần sai, khóa ở lần thứ 5, thời gian còn lại, từ chối mật khẩu đúng trong lúc khóa, hết khóa đúng mốc 15 phút, cửa sổ thời gian trượt, làm sạch sau thành công và nhiều yêu cầu đồng thời. Đồng hồ giả lập chỉ có trong dự án kiểm thử; ứng dụng thật dùng thời gian hệ thống và khóa đủ 15 phút.
+
+Nếu có Node.js, chạy thêm kiểm thử đồng hồ trên giao diện bằng `node --test HeThongDatBan-GoiMon.Tests/login-lockout.test.cjs` (không cần cài thư viện npm). Node.js chỉ phục vụ kiểm thử JavaScript, không bắt buộc để chạy ứng dụng.
 
 Tham khảo triển khai: [cookie authentication](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0), [PasswordHasher](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasher-1?view=aspnetcore-10.0), [EF Core SQL Server](https://learn.microsoft.com/en-us/ef/core/providers/sql-server/).
 

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace HeThongDatBan_GoiMon.Models;
 
@@ -15,4 +16,6 @@ public class LoginViewModel
     [Display(Name = "Mật khẩu")]
     public string Password { get; set; } = "";
     public string? ReturnUrl { get; set; }
+    [BindNever]
+    public int? LockoutRemainingSeconds { get; set; }
 }

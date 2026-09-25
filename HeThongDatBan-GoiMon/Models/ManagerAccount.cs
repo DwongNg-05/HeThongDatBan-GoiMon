@@ -10,4 +10,5 @@ public class ManagerAccount
     [MaxLength(20)] public string PhoneNumber { get; set; } = "";
     [MaxLength(512)] public string PasswordHash { get; set; } = "";
     public bool IsActive { get; set; } = true;
+    public DateTimeOffset? LockoutEndUtc { get; set; }
 }

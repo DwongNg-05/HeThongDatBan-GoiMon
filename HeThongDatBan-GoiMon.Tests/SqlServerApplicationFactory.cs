@@ -12,15 +12,18 @@ using Xunit;
 
 namespace HeThongDatBan_GoiMon.Tests;
 
-public sealed class SqlServerApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public class SqlServerApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly string databaseName = "HeThongDatBanGoiMon_Tests_" + Guid.NewGuid().ToString("N");
+    public TimeProvider Clock { get; protected set; } = TimeProvider.System;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.ConfigureServices(services =>
         {
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton(Clock);
             var connection = new SqlConnectionStringBuilder(
                 Environment.GetEnvironmentVariable("TEST_SQLSERVER_CONNECTION")
                 ?? @"Server=(localdb)\MSSQLLocalDB;Trusted_Connection=True;TrustServerCertificate=True")

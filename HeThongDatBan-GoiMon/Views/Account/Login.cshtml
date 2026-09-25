@@ -12,6 +12,13 @@
                 <form asp-controller="Account" asp-action="Login" method="post">
                     <input asp-for="ReturnUrl" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                    @if (Model.LockoutRemainingSeconds is int seconds)
+                    {
+                        <div class="alert alert-warning" id="login-lockout" role="status" data-remaining-seconds="@seconds">
+                            <p class="mb-1">Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần.</p>
+                            <p class="mb-0">Vui lòng thử lại sau <strong id="lockout-countdown" role="timer">@TimeSpan.FromSeconds(seconds).ToString(@"mm\:ss")</strong>.</p>
+                        </div>
+                    }
                     <div class="mb-3">
                         <label asp-for="Identifier" class="form-label"></label>
                         <input asp-for="Identifier" class="form-control" autocomplete="username" autofocus maxlength="100" />
@@ -30,4 +37,5 @@
 </div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/login-lockout.js" asp-append-version="true"></script>
 }

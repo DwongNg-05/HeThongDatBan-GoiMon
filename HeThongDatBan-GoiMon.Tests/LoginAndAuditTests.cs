@@ -51,8 +51,8 @@ public class LoginAndAuditTests(SqlServerApplicationFactory factory) : IClassFix
     [Theory]
     [InlineData("quanly1", "WrongPassword!", LoginService.InvalidCredentials)]
     [InlineData("0900000001", "WrongPassword!", LoginService.InvalidCredentials)]
-    [InlineData("does-not-exist", "WrongPassword!", LoginService.AccountNotFound)]
-    [InlineData("0999999999", "WrongPassword!", LoginService.AccountNotFound)]
+    [InlineData("does-not-exist", "WrongPassword!", LoginService.InvalidCredentials)]
+    [InlineData("0999999999", "WrongPassword!", LoginService.InvalidCredentials)]
     public async Task Invalid_credentials_return_expected_error_and_no_session(string identifier, string password, string expectedError)
     {
         using var client = factory.Browser();
@@ -60,8 +60,7 @@ public class LoginAndAuditTests(SqlServerApplicationFactory factory) : IClassFix
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
         Assert.Contains(expectedError, html);
-        Assert.DoesNotContain(expectedError == LoginService.AccountNotFound
-            ? LoginService.InvalidCredentials : LoginService.AccountNotFound, html);
+        Assert.DoesNotContain("Tài khoản không tồn tại", html);
         Assert.DoesNotContain(password, html);
         Assert.False(response.Headers.TryGetValues("Set-Cookie", out var cookies) && cookies.Any(x => x.StartsWith("HeThongDatBan.Auth=")));
         Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/Management")).StatusCode);
@@ -119,15 +118,6 @@ public class LoginAndAuditTests(SqlServerApplicationFactory factory) : IClassFix
         var response = await client.GetAsync(path);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Contains("/Account/Login", response.Headers.Location!.OriginalString);
-    }
-
-    [Fact]
-    public async Task No_lockout_after_six_failed_attempts()
-    {
-        using var client = factory.Browser();
-        for (var i = 0; i < 6; i++)
-            Assert.Equal(HttpStatusCode.OK, (await LoginAsync(client, "quanly1", "wrong")).StatusCode);
-        Assert.Equal(HttpStatusCode.Redirect, (await LoginAsync(client, "quanly1")).StatusCode);
     }
 
     [Fact]

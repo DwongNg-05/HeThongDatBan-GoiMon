@@ -6,6 +6,7 @@ namespace HeThongDatBan_GoiMon.Data;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
     public DbSet<ManagerAccount> ManagerAccounts => Set<ManagerAccount>();
+    public DbSet<FailedLoginAttempt> FailedLoginAttempts => Set<FailedLoginAttempt>();
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
     public DbSet<MenuChangeLog> MenuChangeLogs => Set<MenuChangeLog>();
 
@@ -13,6 +14,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         modelBuilder.Entity<ManagerAccount>().HasIndex(x => x.NormalizedUserName).IsUnique();
         modelBuilder.Entity<ManagerAccount>().HasIndex(x => x.PhoneNumber).IsUnique();
+        modelBuilder.Entity<FailedLoginAttempt>().HasIndex(x => new { x.AccountId, x.OccurredAtUtc });
+        modelBuilder.Entity<FailedLoginAttempt>().HasOne(x => x.Account).WithMany()
+            .HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<MenuItem>().Property(x => x.Price).HasPrecision(18, 2);
         modelBuilder.Entity<MenuItem>().ToTable(t => t.HasCheckConstraint("CK_MenuItems_Price", "[Price] >= 0"));
         modelBuilder.Entity<MenuChangeLog>().Property(x => x.OldPrice).HasPrecision(18, 2);
