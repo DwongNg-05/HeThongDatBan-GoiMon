@@ -1,0 +1,29 @@
+# Build outputs and IDE settings
+**/bin/
+**/obj/
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local secrets and databases
+.env
+.env.*
+!.env.example
+**/appsettings.Local.json
+*.pfx
+*.p12
+*.mdf
+*.ldf
+*.db
+
+# Generated files
+TestResults/
+artifacts/
+publish/
+*.log
+.DS_Store
+Thumbs.db
