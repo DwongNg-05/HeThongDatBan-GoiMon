@@ -1,0 +1,32 @@
+@model IReadOnlyList<MenuChangeLog>
+@using System.Globalization
+@{
+    ViewData["Title"] = "Lịch sử thay đổi";
+    var culture = CultureInfo.GetCultureInfo("vi-VN");
+}
+<a asp-action="Index" class="d-inline-block mb-3">← Quay lại thực đơn</a>
+<h1 class="h3">Lịch sử thay đổi thực đơn</h1>
+<p class="text-muted">100 thay đổi gần nhất. Thời gian hiển thị theo giờ Việt Nam (UTC+7).</p>
+<div class="table-responsive card shadow-sm">
+    <table class="table align-middle mb-0">
+        <thead class="table-light">
+            <tr><th scope="col">Thời điểm</th><th scope="col">Người thực hiện</th><th scope="col">Món</th><th scope="col">Trước thay đổi</th><th scope="col">Sau thay đổi</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var entry in Model)
+        {
+            <tr>
+                <td class="text-nowrap">@entry.ChangedAtUtc.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy HH:mm:ss")</td>
+                <td><strong>@entry.ActorUserName</strong><br /><small class="text-muted">ID: @entry.ActorId</small></td>
+                <td>#@entry.MenuItemId</td>
+                <td>@entry.OldName<br /><span class="text-muted">@entry.OldPrice.ToString("#,##0.##", culture) đ</span></td>
+                <td>@entry.NewName<br /><span class="text-muted">@entry.NewPrice.ToString("#,##0.##", culture) đ</span></td>
+            </tr>
+        }
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="5" class="p-4 text-muted text-center">Chưa có thay đổi nào. Hãy sửa tên hoặc giá một món để kiểm tra truy vết.</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

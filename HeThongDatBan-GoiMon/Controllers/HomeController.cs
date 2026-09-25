@@ -8,7 +8,7 @@ namespace HeThongDatBan_GoiMon.Controllers
     {
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Index", "Management");
         }
 
         public IActionResult Privacy()
