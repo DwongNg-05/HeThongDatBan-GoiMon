@@ -1,6 +1,4 @@
 using HeThongDatBan_GoiMon.Services;
-using HeThongDatBan_GoiMon.Data;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,8 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IMenuItemService, MenuItemService>();
 builder.Services.AddSingleton<IOrderService, OrderService>();
-builder.Services.AddDbContext<RestaurantDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
