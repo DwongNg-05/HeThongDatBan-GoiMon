@@ -80,6 +80,8 @@ Trong chuỗi PowerShell thực tế, dùng **một** dấu `\` giữa tên máy
 
 Nếu gặp lỗi không kết nối được LocalDB, kiểm tra đã cài SQL Server Express LocalDB và chạy `SqlLocalDB start MSSQLLocalDB`, hoặc cấu hình instance SQL Server của máy như trên.
 
+Ở Development trên Windows, ứng dụng chủ động chạy `SqlLocalDB start`, đọc địa chỉ named pipe hiện tại bằng `SqlLocalDB info` và dùng địa chỉ đó để kết nối. Điều này tránh lỗi khởi động/phân giải `(localdb)` gặp khi chạy trong Visual Studio. Địa chỉ được đọc lại mỗi lần khởi động, không ghi cố định vào cấu hình và không thay đổi database. Các kết nối SQL Server thông thường không đi qua bước này. Nếu công cụ LocalDB không chạy được, ứng dụng hiển thị lỗi hướng dẫn kiểm tra thay vì bỏ qua bước cập nhật database. Tham khảo [SqlLocalDB utility của Microsoft](https://learn.microsoft.com/en-us/sql/tools/sqllocaldb-utility).
+
 ## Migration và kiểm thử
 
 Công cụ EF Core được cố định phiên bản trong `.config/dotnet-tools.json`:

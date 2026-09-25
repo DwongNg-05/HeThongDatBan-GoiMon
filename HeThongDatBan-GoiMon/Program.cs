@@ -8,6 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsDevelopment())
+{
+    var connection = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection.");
+    builder.Configuration["ConnectionStrings:DefaultConnection"] = await LocalDbConnection.PrepareAsync(connection);
+}
+
 // Add services to the container.
 builder.Services.AddControllersWithViews(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
