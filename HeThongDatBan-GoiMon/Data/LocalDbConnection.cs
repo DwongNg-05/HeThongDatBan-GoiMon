@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.Versioning;
+using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
+using Microsoft.Win32;
 
 namespace HeThongDatBan_GoiMon.Data;
 
@@ -17,14 +20,63 @@ public static class LocalDbConnection
         var executable = FindUtility();
         await RunAsync(executable, "start", instance);
         var info = await RunAsync(executable, "info", instance);
-        // Do not depend on localized labels such as "Instance pipe name".
-        const string pipePrefix = @"np:\\.\pipe\";
-        var start = info.IndexOf(pipePrefix, StringComparison.OrdinalIgnoreCase);
-        if (start < 0)
-            throw new InvalidOperationException("LocalDB đã khởi động nhưng chưa cung cấp địa chỉ kết nối. Chạy SqlLocalDB info để kiểm tra instance.");
+        return await ResolveConnectionAsync(connection.ConnectionString, instance, info);
+    }
 
-        connection.DataSource = info[start..].Split(['\r', '\n'], 2)[0].Trim();
-        return connection.ConnectionString;
+    internal static string? ParsePipeName(string info)
+    {
+        // Accept both np-prefixed and bare pipe paths, including NUL-padded tool output.
+        var match = Regex.Match(info.Replace("\0", ""), @"(?:np:)?\\\\\.\\pipe\\LOCALDB#[a-z0-9]+\\tsql\\query",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (!match.Success) return null;
+        return match.Value.StartsWith("np:", StringComparison.OrdinalIgnoreCase) ? match.Value : "np:" + match.Value;
+    }
+
+    [SupportedOSPlatform("windows")]
+    internal static async Task<string> ResolveConnectionAsync(string connectionString, string instance, string info)
+    {
+        var connection = new SqlConnectionStringBuilder(connectionString);
+        var candidates = new[] { ParsePipeName(info), ReadRegisteredPipe(instance) }
+            .OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase);
+        Exception? lastError = null;
+        foreach (var pipe in candidates)
+        {
+            connection.DataSource = pipe;
+            // Probe master so a new project database can still be created by migrations.
+            var probeOptions = new SqlConnectionStringBuilder(connection.ConnectionString)
+            {
+                InitialCatalog = "master", AttachDBFilename = "", ConnectTimeout = 5, Pooling = false
+            };
+            try
+            {
+                await using var probe = new SqlConnection(probeOptions.ConnectionString);
+                await probe.OpenAsync();
+                return connection.ConnectionString;
+            }
+            catch (SqlException exception) { lastError = exception; }
+        }
+        throw new InvalidOperationException(
+            $"Không kết nối được LocalDB '{instance}'. Hãy kiểm tra SqlLocalDB info. Đầu ra công cụ: {info.Trim()}", lastError);
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static string? ReadRegisteredPipe(string instance)
+    {
+        // LocalDB registers the current pipe identifier for each instance under the current user.
+        using var instances = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Microsoft SQL Server\UserInstances");
+        if (instances is null) return null;
+        foreach (var key in instances.GetSubKeyNames())
+        {
+            using var entry = instances.OpenSubKey(key);
+            var directory = entry?.GetValue("DataDirectory") as string;
+            var server = entry?.GetValue("InstanceName") as string;
+            if (directory is null || server is null) continue;
+            var name = Path.GetFileName(directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.Equals(name, instance, StringComparison.OrdinalIgnoreCase) &&
+                Regex.IsMatch(server, @"\ALOCALDB#[a-z0-9]+\z", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+                return $@"np:\\.\pipe\{server}\tsql\query";
+        }
+        return null;
     }
 
     private static string FindUtility()
@@ -71,6 +123,6 @@ public static class LocalDbConnection
         var errorText = await error;
         if (process.ExitCode != 0)
             throw new InvalidOperationException($"Không thể {command} LocalDB '{instance}'. {result.Trim()} {errorText.Trim()}");
-        return result;
+        return result + Environment.NewLine + errorText;
     }
 }
