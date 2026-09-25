@@ -32,6 +32,22 @@ Có thể mở `HeThongDatBan-GoiMon.slnx` trong Visual Studio để phát tri�
 - `HeThongDatBan-GoiMon/wwwroot`: CSS, JavaScript và tài nguyên tĩnh.
 - `HeThongDatBan-GoiMon/Program.cs`: cấu hình và khởi chạy ứng dụng.
 
+## Database dùng chung
+
+Schema database được quản lý bằng Entity Framework Core migration trong thư mục `HeThongDatBan-GoiMon/Migrations`. Không tạo hoặc sửa bảng thủ công bằng SSMS.
+
+Mỗi thành viên dùng SQL Server database local tên `RestaurantDev`. Sau khi kéo code mới, chạy:
+
+```bash
+cd HeThongDatBan-GoiMon
+dotnet tool restore
+dotnet tool run dotnet-ef database update
+```
+
+Lệnh trên tạo hoặc cập nhật database theo toàn bộ migration đã được gộp vào `main`. Database local của từng người có thể có dữ liệu thử khác nhau, nhưng cấu trúc bảng sẽ giống nhau.
+
+Khi cần thay đổi schema, tạo migration trên nhánh chức năng và đưa cả Model, DbContext và migration vào Pull Request. Không gửi file `.mdf` hoặc backup database qua nhóm.
+
 ## Cách làm việc nhóm
 
 Mỗi công việc dùng một nhánh riêng, ví dụ:
